@@ -5,10 +5,13 @@ plugins {
 
 repositories {
   mavenCentral()
+  maven {
+    url "https://repository.apache.org/content/repositories/snapshots/"
+  }
 }
 
 ext {
-  icebergVersion = '1.1.0'
+  icebergVersion = '1.2.0-SNAPSHOT'
   awsSdkVersion = '2.17.257'
 }
 
