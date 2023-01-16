@@ -11,6 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+FROM amazoncorretto:17-alpine-jdk AS builder
+
+ADD ./ /iceberg-rest
+
+WORKDIR /iceberg-rest
+
+RUN ./gradlew build --no-daemon
+
 FROM azul/zulu-openjdk:17
 
 RUN \
@@ -18,16 +26,14 @@ RUN \
     groupadd iceberg --gid 1000 && \
     useradd iceberg --uid 1000 --gid 1000 --create-home
 
-COPY --chown=iceberg:iceberg build/libs /usr/lib/iceberg-rest
+COPY --chown=iceberg:iceberg --from=builder /iceberg-rest/build/libs /usr/lib/iceberg-rest
 
 ENV CATALOG_CATALOG__IMPL=org.apache.iceberg.jdbc.JdbcCatalog
-ENV CATALOG_URI=jdbc:sqlite:file:/tmp/iceberg_rest_mode=memory
-ENV CATALOG_JDBC_USERNAME=user
-ENV CATALOG_JDBC_PASSWORD=password
+ENV CATALOG_IO__IMPL=org.apache.iceberg.aws.s3.S3FileIO
 ENV REST_PORT=8181
 
 EXPOSE $REST_PORT
 USER iceberg:iceberg
 ENV LANG en_US.UTF-8
 WORKDIR /usr/lib/iceberg-rest
-CMD ["java", "-jar", "iceberg-rest-image-all.jar"]
+CMD ["java", "-jar", "iceberg-rest-all.jar"]
